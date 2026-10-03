@@ -1,0 +1,58 @@
+﻿const salesData = [
+  {
+    id: "SAL-001",
+    customerId: "CUS-001",
+    salesperson: "Sarah Wilson",
+    productId: "PRD-001",
+    amount: 150,
+    status: "Completed",
+    date: "2026-09-30",
+  },
+  {
+    id: "SAL-002",
+    customerId: "CUS-002",
+    salesperson: "Robert Anderson",
+    productId: "PRD-002",
+    amount: 250,
+    status: "Completed",
+    date: "2026-09-30",
+  },
+  {
+    id: "SAL-003",
+    customerId: "CUS-003",
+    salesperson: "Sarah Wilson",
+    productId: "PRD-003",
+    amount: 35,
+    status: "Pending",
+    date: "2026-09-30",
+  },
+  {
+    id: "SAL-004",
+    customerId: "CUS-004",
+    salesperson: "Robert Anderson",
+    productId: "PRD-004",
+    amount: 180,
+    status: "Completed",
+    date: "2026-09-29",
+  },
+  {
+    id: "SAL-005",
+    customerId: "CUS-005",
+    salesperson: "Sarah Wilson",
+    productId: "PRD-001",
+    amount: 150,
+    status: "Cancelled",
+    date: "2026-09-29",
+  },
+  {
+    id: "SAL-006",
+    customerId: "CUS-001",
+    salesperson: "Robert Anderson",
+    productId: "PRD-005",
+    amount: 300,
+    status: "Pending",
+    date: "2026-09-28",
+  },
+];
+
+export default salesData;
