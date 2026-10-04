@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import DailyDateNavigator from "@/components/daily/DailyDateNavigator";
-import DailyWorkforceEntry from "@/components/daily/DailyWorkforceEntry";
+import WorkforceEntryTable from "@/components/workforce/WorkforceEntryTable";
 import SalesEntryTable from "@/components/sales/SalesEntryTable";
 import { useToast } from "@/components/feedback/ToastProvider";
 
@@ -92,13 +92,9 @@ export default function DailyEntriesSection({
     };
   });
 
-  const dateKey = useMemo(
-    () => getDateKey(selectedDate),
-    [selectedDate]
-  );
+  const dateKey = useMemo(() => getDateKey(selectedDate), [selectedDate]);
 
-  const workflow =
-    workflowByDate[dateKey] || getInitialWorkflow();
+  const workflow = workflowByDate[dateKey] || getInitialWorkflow();
 
   const isWorkTab = activeTab === "work";
   const activeSection = isWorkTab ? "work" : "sales";
@@ -275,8 +271,7 @@ export default function DailyEntriesSection({
   };
 
   const activeStatus =
-    activeStatusConfig[activeWorkflow.status] ||
-    activeStatusConfig.draft;
+    activeStatusConfig[activeWorkflow.status] || activeStatusConfig.draft;
 
   const ActiveStatusIcon = activeStatus.icon;
 
@@ -300,10 +295,7 @@ export default function DailyEntriesSection({
               </button>
 
               <div className="flex min-w-0 items-center gap-2 text-xs">
-                <CheckCircle2
-                  size={14}
-                  className="shrink-0 text-emerald-500"
-                />
+                <CheckCircle2 size={14} className="shrink-0 text-emerald-500" />
 
                 <span className="truncate text-slate-500">
                   Last {isWorkTab ? "work" : "sales"} saved{" "}
@@ -393,7 +385,8 @@ export default function DailyEntriesSection({
                   </p>
                 </div>
                 <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-orange-700 ring-1 ring-orange-100">
-                  {revisionHistory.length} {revisionHistory.length === 1 ? "revision" : "revisions"}
+                  {revisionHistory.length}{" "}
+                  {revisionHistory.length === 1 ? "revision" : "revisions"}
                 </span>
               </div>
 
@@ -434,12 +427,10 @@ export default function DailyEntriesSection({
           {isSubmitted && (
             <div className="flex flex-col gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-2">
-                <LockKeyhole
-                  size={15}
-                  className="shrink-0 text-emerald-600"
-                />
+                <LockKeyhole size={15} className="shrink-0 text-emerald-600" />
                 <p className="text-xs text-emerald-800">
-                  Work and sales for this day have been finally submitted and are locked.
+                  Work and sales for this day have been finally submitted and
+                  are locked.
                 </p>
               </div>
 
@@ -459,7 +450,8 @@ export default function DailyEntriesSection({
               <div className="flex min-w-0 items-center gap-2">
                 <FileEdit size={15} className="shrink-0 text-orange-600" />
                 <p className="text-xs text-orange-800">
-                  This day is currently open for revision. Work and sales can be edited and saved again.
+                  This day is currently open for revision. Work and sales can be
+                  edited and saved again.
                 </p>
               </div>
               <span className="inline-flex h-7 shrink-0 items-center rounded-lg bg-white px-2.5 text-[10px] font-semibold text-orange-700 ring-1 ring-orange-100">
@@ -542,7 +534,7 @@ export default function DailyEntriesSection({
       ===================================================== */}
       <div className="min-w-0 overflow-visible">
         {isWorkTab ? (
-          <DailyWorkforceEntry
+          <WorkforceEntryTable
             selectedDate={selectedDate}
             onTotalsChange={onTotalsChange}
             entriesVisible={showEntries}
