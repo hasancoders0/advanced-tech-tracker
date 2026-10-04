@@ -1,6 +1,11 @@
+"use client";
+
 import {
   AlertTriangle,
   Clock3,
+  DollarSign,
+  ShoppingCart,
+  Timer,
   Users,
 } from "lucide-react";
 
@@ -53,40 +58,94 @@ function SummaryCard({
 }
 
 export default function DailySummary({
-  employees = 0,
-  hoursProduced = 0,
-  hoursWorked = 0,
-  emergencyHours = 0,
+  activeTab = "work",
+
+  workforceTotals = {
+    employees: 0,
+    produced: 0,
+    worked: 0,
+    emergency: 0,
+  },
+
+  salesTotals = {
+    count: 0,
+    revenue: 0,
+    averageSale: 0,
+    pending: 0,
+  },
 }) {
+  /* =====================================================
+     WORK SUMMARY
+  ===================================================== */
+
+  if (activeTab === "work") {
+    return (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="Employees"
+          value={workforceTotals.employees}
+          description="Working today"
+          icon={Users}
+        />
+
+        <SummaryCard
+          label="Hours Produced"
+          value={Number(workforceTotals.produced || 0).toFixed(2)}
+          description="Total produced"
+          icon={Clock3}
+        />
+
+        <SummaryCard
+          label="Hours Worked"
+          value={Number(workforceTotals.worked || 0).toFixed(2)}
+          description="Total worked"
+          icon={Clock3}
+        />
+
+        <SummaryCard
+          label="Emergency Hours"
+          value={Number(workforceTotals.emergency || 0).toFixed(2)}
+          description="Emergency work"
+          icon={AlertTriangle}
+          danger={Number(workforceTotals.emergency || 0) > 0}
+        />
+      </div>
+    );
+  }
+
+  /* =====================================================
+     SALES SUMMARY
+  ===================================================== */
+
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <SummaryCard
-        label="Employees"
-        value={employees}
-        description="Working today"
-        icon={Users}
+        label="Sales"
+        value={salesTotals.count}
+        description="Sales today"
+        icon={ShoppingCart}
       />
 
       <SummaryCard
-        label="Hours Produced"
-        value={Number(hoursProduced).toFixed(2)}
-        description="Total produced"
-        icon={Clock3}
+        label="Revenue"
+        value={`$${Number(salesTotals.revenue || 0).toFixed(2)}`}
+        description="Total revenue"
+        icon={DollarSign}
       />
 
       <SummaryCard
-        label="Hours Worked"
-        value={Number(hoursWorked).toFixed(2)}
-        description="Total worked"
-        icon={Clock3}
+        label="Average Sale"
+        value={`$${Number(salesTotals.averageSale || 0).toFixed(2)}`}
+        description="Average value"
+        icon={Timer}
       />
 
       <SummaryCard
-        label="Emergency Hours"
-        value={Number(emergencyHours).toFixed(2)}
-        description="Emergency work"
+        label="Pending"
+        value={salesTotals.pending}
+        description="Pending sales"
         icon={AlertTriangle}
-        danger={Number(emergencyHours) > 0}
+        danger={Number(salesTotals.pending || 0) > 0}
       />
     </div>
   );

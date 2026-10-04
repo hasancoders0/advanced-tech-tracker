@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import DailyTabs from "@/components/daily/DailyTabs";
-import DailyStats from "@/components/daily/DailyStats";
+import DailySummary from "@/components/daily/DailySummary";
 import DailyEntriesSection from "@/components/daily/DailyEntriesSection";
 
 export default function DailyPage() {
@@ -17,6 +17,10 @@ export default function DailyPage() {
     return today;
   });
 
+  /* =====================================================
+     WORKFORCE TOTALS
+  ===================================================== */
+
   const [workforceTotals, setWorkforceTotals] = useState({
     employees: 0,
     produced: 0,
@@ -24,9 +28,18 @@ export default function DailyPage() {
     emergency: 0,
   });
 
+  /* =====================================================
+     SALES TOTALS
+  ===================================================== */
+
   const [salesTotals, setSalesTotals] = useState({
     count: 0,
     revenue: 0,
+    averageSale: 0,
+    pending: 0,
+    paid: 0,
+    productCount: 0,
+    serviceCount: 0,
   });
 
   return (
@@ -36,10 +49,12 @@ export default function DailyPage() {
           LEFT  = PAGE TITLE + TABS
           RIGHT = SUMMARY CARDS
       ===================================================== */}
+
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(320px,0.8fr)_minmax(760px,1.7fr)] xl:items-start">
         {/* =================================================
             LEFT SIDE
         ================================================= */}
+
         <div className="min-w-0">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">
@@ -56,16 +71,18 @@ export default function DailyPage() {
           </div>
 
           {/* TABS */}
+
           <div className="mt-4">
             <DailyTabs activeTab={activeTab} onChange={setActiveTab} />
           </div>
         </div>
 
         {/* =================================================
-            RIGHT SIDE — SUMMARY CARDS
+            RIGHT SIDE — SUMMARY
         ================================================= */}
+
         <div className="min-w-0">
-          <DailyStats
+          <DailySummary
             activeTab={activeTab}
             workforceTotals={workforceTotals}
             salesTotals={salesTotals}
@@ -76,6 +93,7 @@ export default function DailyPage() {
       {/* =====================================================
           DAILY ENTRIES
       ===================================================== */}
+
       <DailyEntriesSection
         activeTab={activeTab}
         selectedDate={selectedDate}

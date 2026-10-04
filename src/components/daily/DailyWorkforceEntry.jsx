@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { workforceData } from "@/data/workforce/workforce-daily";
+import techniciansData from "@/data/master/technicians";
 
 const STATUS_OPTIONS = [
   {
@@ -27,9 +28,32 @@ const STATUS_OPTIONS = [
 ];
 
 /* =========================================================
+   DATE HELPERS
+   ========================================================= */
+
+function formatDateForData(date) {
+  if (!date) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+/* =========================================================
    TIME HELPERS
 
    IMPORTANT:
+
    The application uses HH.MM-style time values.
 
    40.00 = 40 hours 00 minutes
@@ -94,15 +118,20 @@ function minutesToTimeCode(totalMinutes) {
 }
 
 /*
- * Converts old decimal-hour data into the
- * new HH.MM-style time code.
+ * Converts conventional decimal-hour data
+ * into the application's HH.MM-style time code.
  *
  * Example:
  *
- * 40.75 decimal hours
- * = 40 hours 45 minutes
- * = 41.15 in the new format.
+ * 8.5 decimal hours
+ * = 8 hours 30 minutes
+ * = 8.30
+ *
+ * 4.75 decimal hours
+ * = 4 hours 45 minutes
+ * = 4.45
  */
+
 function decimalHoursToTimeCode(value) {
   const numericValue = Number(value);
 
@@ -139,13 +168,20 @@ function isValidTimeCode(value) {
    * 40.5
    * 40.59
    */
-  if (!/^\d{0,3}(\.\d{0,2})?$/.test(textValue)) {
+
+  if (
+    !/^\d{0,3}(\.\d{0,2})?$/.test(
+      textValue
+    )
+  ) {
     return false;
   }
 
   const parts = textValue.split(".");
 
-  const hours = Number(parts[0] || 0);
+  const hours = Number(
+    parts[0] || 0
+  );
 
   const minutes = Number(
     parts[1] || 0
@@ -159,11 +195,9 @@ function isValidTimeCode(value) {
   }
 
   /*
-   * This is the critical rule.
-   *
-   * 00-59 = valid
-   * 60-99 = invalid
+   * Minutes must be between 00 and 59.
    */
+
   if (minutes > 59) {
     return false;
   }
@@ -186,7 +220,9 @@ function normalizeTimeCode(value) {
 
   const parts = String(value).split(".");
 
-  const hours = Number(parts[0] || 0);
+  const hours = Number(
+    parts[0] || 0
+  );
 
   const minutes = Number(
     parts[1] || 0
@@ -218,18 +254,80 @@ function formatMinutesAsTimeCode(
 ) {
   const safeMinutes = Math.max(
     0,
-    Math.round(Number(totalMinutes) || 0)
+    Math.round(
+      Number(totalMinutes) || 0
+    )
   );
 
   const hours = Math.floor(
     safeMinutes / 60
   );
 
-  const minutes = safeMinutes % 60;
+  const minutes =
+    safeMinutes % 60;
 
   return `${hours}.${String(
     minutes
   ).padStart(2, "0")}`;
+}
+
+/* =========================================================
+   DAILY DATA HELPERS
+   ========================================================= */
+
+/*
+ * The daily mock data may be stored in either:
+ *
+ * 1. Flat format:
+ *
+ * {
+ *   date,
+ *   technicianId,
+ *   ...
+ * }
+ *
+ * 2. Nested date format:
+ *
+ * {
+ *   date,
+ *   entries: [...]
+ * }
+ *
+ * These helpers support both.
+ */
+
+function getDailyEntriesForDate(
+  dateKey
+) {
+  if (!Array.isArray(workforceData)) {
+    return [];
+  }
+
+  /*
+   * First check nested date records.
+   */
+
+  const dateRecord =
+    workforceData.find(
+      (record) =>
+        record?.date === dateKey
+    );
+
+  if (
+    dateRecord &&
+    Array.isArray(dateRecord.entries)
+  ) {
+    return dateRecord.entries;
+  }
+
+  /*
+   * Otherwise support flat daily entries.
+   */
+
+  return workforceData.filter(
+    (entry) =>
+      entry?.date === dateKey
+  );
 }
 
 /* =========================================================
@@ -243,7 +341,9 @@ function HourInput({
   maxMinutes,
 }) {
   const [inputValue, setInputValue] =
-    useState(formatTimeCode(value));
+    useState(
+      formatTimeCode(value)
+    );
 
   const isEditing =
     useRef(false);
@@ -252,6 +352,7 @@ function HourInput({
    * Synchronize external value only when
    * the user is not currently typing.
    */
+
   useEffect(() => {
     if (!isEditing.current) {
       setInputValue(
@@ -308,6 +409,7 @@ function HourInput({
      * 40.5
      * 40.59
      */
+
     if (
       !/^\d{0,3}(\.\d{0,2})?$/.test(
         nextValue
@@ -319,6 +421,7 @@ function HourInput({
     /*
      * Do not allow minutes above 59.
      */
+
     if (
       nextValue.includes(".")
     ) {
@@ -338,6 +441,7 @@ function HourInput({
     /*
      * Don't commit incomplete values.
      */
+
     if (
       nextValue === "" ||
       nextValue.endsWith(".")
@@ -369,21 +473,11 @@ function HourInput({
 
   /*
    * Custom arrow behavior.
-
-   * This is important.
-
-   * Native number input:
-   *
-   * 40.59 + ArrowUp
-   * would normally become 40.60.
-   *
-   * We don't want that.
-   *
-   * Instead:
    *
    * 40.59 + ArrowUp = 41.00
    * 40.00 + ArrowDown = 39.59
    */
+
   function handleKeyDown(event) {
     if (
       disabled ||
@@ -430,10 +524,6 @@ function HourInput({
   function handleFocus() {
     isEditing.current = true;
 
-    /*
-     * Keep the current value,
-     * but allow the user to edit it naturally.
-     */
     setInputValue(
       formatTimeCode(value)
     );
@@ -457,6 +547,7 @@ function HourInput({
       setInputValue(
         formatTimeCode(value)
       );
+
       return;
     }
 
@@ -480,6 +571,7 @@ function HourInput({
       );
 
       onChange(safeValue);
+
       return;
     }
 
@@ -507,8 +599,7 @@ function HourInput({
         className={[
           "h-9 w-full rounded-lg border",
           "px-2.5 pr-8 text-sm font-medium",
-          "outline-none",
-          "tracking-tight",
+          "outline-none tracking-tight",
           disabled
             ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
             : "border-slate-200 bg-white text-slate-900 focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
@@ -527,36 +618,45 @@ function HourInput({
    ========================================================= */
 
 function normalizeEmployee(
-  employee,
+  dailyEntry,
+  technician,
   index
 ) {
   /*
-   * Existing mock data may currently use
-   * conventional decimal hours.
+   * Daily data contains the date-specific
+   * hours/status.
    *
-   * Example:
-   * 40.75 decimal hours
+   * Technician data contains:
    *
-   * gets converted to:
-   * 41.15 time code.
+   * - name
+   * - employeeId
+   * - role
+   * - department
    */
 
   const workedSource =
-    employee.hoursWorked ??
-    employee.worked ??
-    employee.hours ??
+    dailyEntry?.hoursWorked ??
+    dailyEntry?.worked ??
+    dailyEntry?.hours ??
     0;
 
   const producedSource =
-    employee.hoursProduced ??
-    employee.produced ??
-    employee.hours ??
-    workedSource;
+    dailyEntry?.hoursProduced ??
+    dailyEntry?.produced ??
+    dailyEntry?.hours ??
+    0;
 
   const emergencySource =
-    employee.emergencyHours ??
-    employee.emergency ??
+    dailyEntry?.emergencyHours ??
+    dailyEntry?.emergency ??
     0;
+
+  /*
+   * Current mock daily data uses conventional
+   * decimal hours such as 8.5 and 4.75.
+   *
+   * Convert them to HH.MM-style time codes.
+   */
 
   const worked =
     decimalHoursToTimeCode(
@@ -574,34 +674,41 @@ function normalizeEmployee(
     );
 
   const initialStatus =
-    employee.status === "Inactive"
-      ? "No data received"
-      : employee.entryStatus ??
-        employee.status ??
-        "Worked";
+    dailyEntry?.entryStatus ??
+    dailyEntry?.status ??
+    "No data received";
 
   return {
     id:
-      employee.id ??
-      `EMP-${index + 1}`,
+      dailyEntry?.id ??
+      `WF-${technician?.id ?? index + 1}`,
+
+    technicianId:
+      technician?.id ??
+      dailyEntry?.technicianId ??
+      `TECH-${index + 1}`,
 
     employeeId:
-      employee.employeeId ??
-      employee.id ??
+      technician?.employeeId ??
+      technician?.id ??
+      dailyEntry?.employeeId ??
       `EMP-${String(
         index + 1
       ).padStart(3, "0")}`,
 
     name:
-      employee.name ??
+      technician?.name ??
+      dailyEntry?.name ??
       "Unnamed Employee",
 
     role:
-      employee.role ??
+      technician?.role ??
+      dailyEntry?.role ??
       "Technician",
 
     department:
-      employee.department ??
+      technician?.department ??
+      dailyEntry?.department ??
       "General",
 
     status: initialStatus,
@@ -613,7 +720,7 @@ function normalizeEmployee(
     emergency,
 
     notes:
-      employee.notes ??
+      dailyEntry?.notes ??
       "",
   };
 }
@@ -621,10 +728,6 @@ function normalizeEmployee(
 /* =========================================================
    DISPLAY HELPERS
    ========================================================= */
-
-function formatNumber(value) {
-  return formatTimeCode(value);
-}
 
 function getDepartmentTotals(
   entries
@@ -662,33 +765,153 @@ function getDepartmentTotals(
 
 export default function DailyWorkforceEntry({
   selectedDate,
-  onDateChange,
   onTotalsChange,
   entriesVisible = true,
   readOnly = false,
   lastEditedBy = "Roberta Christie",
   lastEditedAt = "4:39 AM",
 }) {
-  const normalizedData = useMemo(() => {
-    return workforceData.map(
-      normalizeEmployee
+  /*
+   * =======================================================
+   * SELECTED DATE
+   * =======================================================
+   */
+
+  const selectedDateKey =
+    useMemo(
+      () =>
+        formatDateForData(
+          selectedDate
+        ),
+      [selectedDate]
     );
-  }, []);
+
+  /*
+   * =======================================================
+   * LOAD DAILY DATA FOR SELECTED DATE
+   * =======================================================
+   */
+
+  const dailyEntries =
+    useMemo(() => {
+      return getDailyEntriesForDate(
+        selectedDateKey
+      );
+    }, [selectedDateKey]);
+
+  /*
+   * =======================================================
+   * CREATE FULL TECHNICIAN LIST
+   *
+   * Important:
+   *
+   * We always show all technicians.
+   *
+   * If the selected date has no record,
+   * that technician gets:
+   *
+   * No data received
+   * 0.00
+   * 0.00
+   * 0.00
+   * =======================================================
+   */
+
+  const entriesForSelectedDate =
+    useMemo(() => {
+      if (
+        !Array.isArray(
+          techniciansData
+        )
+      ) {
+        return [];
+      }
+
+      return techniciansData.map(
+        (
+          technician,
+          index
+        ) => {
+          const dailyEntry =
+            dailyEntries.find(
+              (entry) =>
+                entry?.technicianId ===
+                technician.id
+            );
+
+          return normalizeEmployee(
+            dailyEntry,
+            technician,
+            index
+          );
+        }
+      );
+    }, [dailyEntries]);
+
+  /*
+   * =======================================================
+   * ENTRIES STATE
+   * =======================================================
+   */
 
   const [entries, setEntries] =
-    useState(normalizedData);
+    useState(
+      entriesForSelectedDate
+    );
+
+  /*
+   * =======================================================
+   * IMPORTANT:
+   *
+   * Whenever the selected date changes,
+   * replace the entries with that day's
+   * data.
+   * =======================================================
+   */
+
+  useEffect(() => {
+    setEntries(
+      entriesForSelectedDate
+    );
+
+    /*
+     * Reset department state when
+     * changing date.
+     *
+     * Departments will be opened again
+     * by the initialization effect below.
+     */
+
+    setExpandedDepartments({});
+  }, [
+    selectedDateKey,
+    entriesForSelectedDate,
+  ]);
+
+  /*
+   * =======================================================
+   * DEPARTMENT EXPANSION
+   * =======================================================
+   */
 
   const [
     expandedDepartments,
     setExpandedDepartments,
   ] = useState({});
 
+  /*
+   * Keep track of the previous global
+   * Show / Hide state.
+   */
+
   const previousEntriesVisible =
     useRef(entriesVisible);
 
-  /* =======================================================
-     TOTALS
-     ======================================================= */
+  /*
+   * =======================================================
+   * TOTALS
+   * =======================================================
+   */
 
   const totals = useMemo(() => {
     return entries.reduce(
@@ -727,10 +950,8 @@ export default function DailyWorkforceEntry({
 
   /*
    * Send totals to parent.
-
-   * Parent receives minutes-based totals,
-   * which is much safer for calculations.
    */
+
   useEffect(() => {
     if (
       typeof onTotalsChange ===
@@ -761,32 +982,44 @@ export default function DailyWorkforceEntry({
     onTotalsChange,
   ]);
 
-  /* =======================================================
-     DEPARTMENTS
-     ======================================================= */
+  /*
+   * =======================================================
+   * GROUP BY DEPARTMENT
+   * =======================================================
+   */
 
-  const departments = useMemo(() => {
-    const grouped = {};
+  const departments =
+    useMemo(() => {
+      const grouped = {};
 
-    entries.forEach((entry) => {
-      if (
-        !grouped[entry.department]
-      ) {
-        grouped[entry.department] =
-          [];
-      }
+      entries.forEach(
+        (entry) => {
+          if (
+            !grouped[
+              entry.department
+            ]
+          ) {
+            grouped[
+              entry.department
+            ] = [];
+          }
 
-      grouped[entry.department].push(
-        entry
+          grouped[
+            entry.department
+          ].push(entry);
+        }
       );
-    });
 
-    return Object.entries(grouped);
-  }, [entries]);
+      return Object.entries(
+        grouped
+      );
+    }, [entries]);
 
-  /* =======================================================
-     INITIALIZE DEPARTMENTS
-     ======================================================= */
+  /*
+   * =======================================================
+   * INITIALIZE DEPARTMENTS
+   * =======================================================
+   */
 
   useEffect(() => {
     setExpandedDepartments(
@@ -816,52 +1049,62 @@ export default function DailyWorkforceEntry({
     );
   }, [departments]);
 
-  /* =======================================================
-     GLOBAL SHOW / HIDE
-     ======================================================= */
+  /*
+   * =======================================================
+   * GLOBAL SHOW / HIDE
+   * =======================================================
+   */
 
   useEffect(() => {
     const previous =
       previousEntriesVisible.current;
 
     /*
-     * Show -> Hide
+     * Show → Hide
      */
+
     if (
       previous === true &&
       entriesVisible === false
     ) {
-      setExpandedDepartments(() => {
-        const next = {};
+      setExpandedDepartments(
+        () => {
+          const next = {};
 
-        departments.forEach(
-          ([department]) => {
-            next[department] = false;
-          }
-        );
+          departments.forEach(
+            ([department]) => {
+              next[department] =
+                false;
+            }
+          );
 
-        return next;
-      });
+          return next;
+        }
+      );
     }
 
     /*
-     * Hide -> Show
+     * Hide → Show
      */
+
     if (
       previous === false &&
       entriesVisible === true
     ) {
-      setExpandedDepartments(() => {
-        const next = {};
+      setExpandedDepartments(
+        () => {
+          const next = {};
 
-        departments.forEach(
-          ([department]) => {
-            next[department] = true;
-          }
-        );
+          departments.forEach(
+            ([department]) => {
+              next[department] =
+                true;
+            }
+          );
 
-        return next;
-      });
+          return next;
+        }
+      );
     }
 
     previousEntriesVisible.current =
@@ -871,9 +1114,11 @@ export default function DailyWorkforceEntry({
     departments,
   ]);
 
-  /* =======================================================
-     DEPARTMENT TOGGLE
-     ======================================================= */
+  /*
+   * =======================================================
+   * DEPARTMENT TOGGLE
+   * =======================================================
+   */
 
   function toggleDepartment(
     department
@@ -881,15 +1126,18 @@ export default function DailyWorkforceEntry({
     setExpandedDepartments(
       (current) => ({
         ...current,
+
         [department]:
           !current[department],
       })
     );
   }
 
-  /* =======================================================
-     UPDATE ENTRY
-     ======================================================= */
+  /*
+   * =======================================================
+   * UPDATE ENTRY
+   * =======================================================
+   */
 
   function updateEntry(
     id,
@@ -900,19 +1148,30 @@ export default function DailyWorkforceEntry({
       return;
     }
 
-    setEntries((current) =>
-      current.map((entry) => {
-        if (entry.id !== id) {
-          return entry;
-        }
+    setEntries(
+      (current) =>
+        current.map(
+          (entry) => {
+            if (
+              entry.id !== id
+            ) {
+              return entry;
+            }
 
-        return {
-          ...entry,
-          [field]: value,
-        };
-      })
+            return {
+              ...entry,
+              [field]: value,
+            };
+          }
+        )
     );
   }
+
+  /*
+   * =======================================================
+   * TABLE HEADER VISIBILITY
+   * =======================================================
+   */
 
   const hasExpandedDepartment =
     Object.values(
@@ -923,9 +1182,11 @@ export default function DailyWorkforceEntry({
     entriesVisible ||
     hasExpandedDepartment;
 
-  /* =======================================================
-     RENDER
-     ======================================================= */
+  /*
+   * =======================================================
+   * RENDER
+   * =======================================================
+   */
 
   return (
     <div className="min-w-0 bg-white">
@@ -1055,6 +1316,7 @@ export default function DailyWorkforceEntry({
                         {formatMinutesAsTimeCode(
                           departmentTotals.produced
                         )}
+
                         <span className="ml-1 text-[10px] font-normal text-slate-400">
                           hr
                         </span>
@@ -1069,6 +1331,7 @@ export default function DailyWorkforceEntry({
                         {formatMinutesAsTimeCode(
                           departmentTotals.worked
                         )}
+
                         <span className="ml-1 text-[10px] font-normal text-slate-400">
                           hr
                         </span>
@@ -1083,6 +1346,7 @@ export default function DailyWorkforceEntry({
                         {formatMinutesAsTimeCode(
                           departmentTotals.emergency
                         )}
+
                         <span className="ml-1 text-[10px] font-normal text-slate-400">
                           hr
                         </span>
@@ -1174,12 +1438,14 @@ export default function DailyWorkforceEntry({
                                 updateEntry(
                                   entry.id,
                                   "status",
-                                  event.target
+                                  event
+                                    .target
                                     .value
                                 )
                               }
                               className={[
                                 "h-9 w-full rounded-lg border px-2.5 text-xs font-medium outline-none",
+
                                 readOnly
                                   ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
                                   : "border-slate-200 bg-white text-slate-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
@@ -1293,19 +1559,19 @@ export default function DailyWorkforceEntry({
                                   updateEntry(
                                     entry.id,
                                     "notes",
-                                    event.target
+                                    event
+                                      .target
                                       .value
                                   )
                                 }
                                 placeholder="Add notes..."
                                 className={[
                                   "h-9 w-full rounded-lg border pl-8 pr-2.5 text-xs outline-none",
+
                                   readOnly
                                     ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
                                     : "border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
-                                ].join(
-                                  " "
-                                )}
+                                ].join(" ")}
                               />
                             </div>
                           </div>
@@ -1379,12 +1645,14 @@ export default function DailyWorkforceEntry({
                                     updateEntry(
                                       entry.id,
                                       "status",
-                                      event.target
+                                      event
+                                        .target
                                         .value
                                     )
                                   }
                                   className={[
                                     "h-9 w-full rounded-lg border px-2 text-xs font-medium outline-none",
+
                                     readOnly
                                       ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
                                       : "border-slate-200 bg-white text-slate-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
@@ -1525,13 +1793,15 @@ export default function DailyWorkforceEntry({
                                     updateEntry(
                                       entry.id,
                                       "notes",
-                                      event.target
+                                      event
+                                        .target
                                         .value
                                     )
                                   }
                                   placeholder="Add notes..."
                                   className={[
                                     "h-9 w-full rounded-lg border pl-8 pr-3 text-xs outline-none",
+
                                     readOnly
                                       ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
                                       : "border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
@@ -1575,6 +1845,7 @@ export default function DailyWorkforceEntry({
             {formatMinutesAsTimeCode(
               totals.produced
             )}
+
             <span className="ml-1 text-[10px] font-normal text-slate-400">
               hr
             </span>
@@ -1589,6 +1860,7 @@ export default function DailyWorkforceEntry({
             {formatMinutesAsTimeCode(
               totals.worked
             )}
+
             <span className="ml-1 text-[10px] font-normal text-slate-400">
               hr
             </span>
@@ -1603,6 +1875,7 @@ export default function DailyWorkforceEntry({
             {formatMinutesAsTimeCode(
               totals.emergency
             )}
+
             <span className="ml-1 text-[10px] font-normal text-slate-400">
               hr
             </span>
