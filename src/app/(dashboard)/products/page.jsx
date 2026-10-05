@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { Edit, Eye, Package, Plus, Trash2 } from "lucide-react";
@@ -13,7 +13,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import StatCard from "@/components/common/StatCard";
 
-import productsData from "@/data/master/items";
+import productsData from "@/data/master/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState(productsData);
@@ -148,7 +148,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Products & Services"
+        title="Products & Equipment"
         description="Manage products and services used across the tracker."
         actionLabel="Add Product / Service"
         onAction={() => setModalOpen(true)}
@@ -269,3 +269,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+

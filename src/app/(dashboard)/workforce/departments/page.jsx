@@ -1,283 +1,203 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Building2,
   Users,
-  UserCheck,
-  BarChart3,
 } from "lucide-react";
 
 import PageHeader from "@/components/common/PageHeader";
-import SearchInput from "@/components/common/SearchInput";
 import StatCard from "@/components/common/StatCard";
 
-import DepartmentTable from "@/components/workforce/DepartmentTable";
+import DepartmentForm from "@/components/workforce/DepartmentForm";
+import DepartmentList from "@/components/workforce/DepartmentList";
 
-import techniciansData from "@/data/master/technicians";
+import departmentsData from "@/data/master/departments";
+import employeesData from "@/data/master/employees";
+
+function generateDepartmentId(
+  departments
+) {
+  const numbers = departments
+    .map((department) => {
+      const match = String(
+        department.id || ""
+      ).match(
+        /DEPT-(\d+)/i
+      );
+
+      return match
+        ? Number(match[1])
+        : 0;
+    })
+    .filter(Boolean);
+
+  const highest = numbers.length
+    ? Math.max(...numbers)
+    : 0;
+
+  return `DEPT-${String(
+    highest + 1
+  ).padStart(3, "0")}`;
+}
 
 export default function DepartmentsPage() {
-  const [search, setSearch] =
-    useState("");
-
-  /* =========================================================
-     BUILD DEPARTMENTS FROM TECHNICIAN MASTER DATA
-  ========================================================= */
-
-  const departments = useMemo(() => {
-    const departmentMap =
-      new Map();
-
-    techniciansData.forEach(
-      (technician) => {
-        const id =
-          technician.departmentId;
-
-        const name =
-          technician.department;
-
-        if (!id || !name) {
-          return;
-        }
-
-        if (!departmentMap.has(id)) {
-          departmentMap.set(id, {
-            id,
-            name,
-            technicianCount: 0,
-            activeCount: 0,
-          });
-        }
-
-        const department =
-          departmentMap.get(id);
-
-        department.technicianCount +=
-          1;
-
-        if (
-          technician.status ===
-          "Active"
-        ) {
-          department.activeCount +=
-            1;
-        }
-      }
+  const [departments, setDepartments] =
+    useState(
+      departmentsData || []
     );
 
-    return Array.from(
-      departmentMap.values()
-    ).sort((a, b) =>
-      a.name.localeCompare(
-        b.name
-      )
+  const [employees] =
+    useState(
+      employeesData || []
     );
-  }, []);
-
-  /* =========================================================
-     FILTER
-  ========================================================= */
-
-  const filteredDepartments =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
-
-      if (!query) {
-        return departments;
-      }
-
-      return departments.filter(
-        (department) =>
-          department.name
-            .toLowerCase()
-            .includes(query) ||
-          department.id
-            .toLowerCase()
-            .includes(query)
-      );
-    }, [
-      departments,
-      search,
-    ]);
-
-  /* =========================================================
-     STATS
-  ========================================================= */
 
   const stats = useMemo(() => {
-    const totalDepartments =
+    const total =
       departments.length;
 
-    const activeDepartments =
+    const totalEmployees =
+      employees.length;
+
+    const departmentsWithEmployees =
       departments.filter(
-        (department) =>
-          department.activeCount >
-          0
+        (department) => {
+          return employees.some(
+            (employee) => {
+              const employment =
+                employee.employment ||
+                {};
+
+              const departmentId =
+                employment.departmentId ||
+                employee.departmentId;
+
+              return (
+                departmentId ===
+                department.id
+              );
+            }
+          );
+        }
       ).length;
 
-    const totalTechnicians =
-      departments.reduce(
-        (total, department) =>
-          total +
-          department.technicianCount,
-        0
-      );
-
-    const largestDepartment =
-      departments.reduce(
-        (largest, department) => {
-          if (
-            !largest ||
-            department.technicianCount >
-              largest.technicianCount
-          ) {
-            return department;
-          }
-
-          return largest;
-        },
-        null
-      );
-
     return {
-      totalDepartments,
-      activeDepartments,
-      totalTechnicians,
-      largestDepartment,
+      total,
+      totalEmployees,
+      departmentsWithEmployees,
     };
-  }, [departments]);
+  }, [
+    departments,
+    employees,
+  ]);
 
-  /* =========================================================
-     ACTIONS
-  ========================================================= */
-
-  function handleView(
-    department
+  async function handleAddDepartment(
+    data
   ) {
-    console.log(
-      "View department:",
-      department
+    const newDepartment = {
+      id: generateDepartmentId(
+        departments
+      ),
+
+      name: data.name,
+
+      description:
+        data.description || "",
+    };
+
+    setDepartments(
+      (current) => [
+        ...current,
+        newDepartment,
+      ]
     );
   }
 
-  function handleEdit(
+  function handleDeleteDepartment(
     department
   ) {
-    console.log(
-      "Edit department:",
-      department
+    setDepartments(
+      (current) =>
+        current.filter(
+          (item) =>
+            item.id !==
+            department.id
+        )
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+    <div className="space-y-4">
+      {/* Header */}
 
       <PageHeader
         title="Departments"
-        description="Manage workforce departments and view technician distribution."
-        actionLabel="Add Department"
-        onAction={() =>
-          console.log(
-            "Add department"
-          )
-        }
+        description="Manage workforce departments and their employee assignments."
       />
 
-      {/* =====================================================
-          STATS
-      ===================================================== */}
+      {/* Summary */}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           title="Total Departments"
           value={
-            stats.totalDepartments
+            stats.total
           }
-          description="All departments"
+          description="Configured departments"
           icon={Building2}
         />
 
         <StatCard
-          title="Active Departments"
+          title="Employees"
           value={
-            stats.activeDepartments
-          }
-          description="With active technicians"
-          icon={BarChart3}
-        />
-
-        <StatCard
-          title="Total Technicians"
-          value={
-            stats.totalTechnicians
+            stats.totalEmployees
           }
           description="Across all departments"
           icon={Users}
         />
 
         <StatCard
-          title="Largest Department"
+          title="In Use"
           value={
-            stats.largestDepartment
-              ?.name || "—"
+            stats.departmentsWithEmployees
           }
-          description={
-            stats.largestDepartment
-              ? `${stats.largestDepartment.technicianCount} technicians`
-              : "No data"
-          }
-          icon={UserCheck}
+          description="Departments with employees"
+          icon={Building2}
         />
       </div>
 
-      {/* =====================================================
-          SEARCH
-      ===================================================== */}
+      {/* 50 / 50 Layout */}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search department..."
-        />
-      </div>
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        {/* LEFT — ADD DEPARTMENT */}
 
-      {/* =====================================================
-          TABLE
-      ===================================================== */}
-
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-1 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-800">
-              Department Directory
-            </h2>
-
-            <p className="mt-0.5 text-xs text-slate-400">
-              {filteredDepartments.length}{" "}
-              {filteredDepartments.length ===
-              1
-                ? "department"
-                : "departments"}{" "}
-              shown
-            </p>
-          </div>
+        <div className="min-w-0">
+          <DepartmentForm
+            onSubmit={
+              handleAddDepartment
+            }
+          />
         </div>
 
-        <DepartmentTable
-          departments={
-            filteredDepartments
-          }
-          onView={handleView}
-          onEdit={handleEdit}
-        />
+        {/* RIGHT — DEPARTMENT LIST */}
+
+        <div className="min-w-0">
+          <DepartmentList
+            departments={
+              departments
+            }
+            employees={
+              employees
+            }
+            onDelete={
+              handleDeleteDepartment
+            }
+          />
+        </div>
       </div>
     </div>
   );

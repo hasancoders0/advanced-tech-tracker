@@ -37,7 +37,7 @@ import DataTable from "@/components/common/DataTable";
 import { workforceData } from "@/data/workforce/workforce-daily";
 import salesData from "@/data/sales/sales-daily";
 import { customersData } from "@/data/master/customers";
-import productsData from "@/data/master/items";
+import productsData from "@/data/master/products";
 
 export default function DashboardPage() {
   const customerMap = useMemo(() => {

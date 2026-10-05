@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { workforceData } from "@/data/workforce/workforce-daily";
-import techniciansData from "@/data/master/technicians";
+import techniciansData from "@/data/master/employees";
 
 const STATUS_OPTIONS = [
   {

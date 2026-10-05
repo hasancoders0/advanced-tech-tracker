@@ -1,41 +1,29 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+
 import { z } from "zod";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Building2,
-  Check,
-  RotateCcw,
-} from "lucide-react";
+
+import { BriefcaseBusiness, Check, RotateCcw } from "lucide-react";
 
 import Input from "@/components/ui/Input";
 
-const departmentSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Department name is required"),
+const roleSchema = z.object({
+  name: z.string().min(1, "Role name is required"),
 
-  description: z
-    .string()
-    .optional(),
+  description: z.string().optional(),
 });
 
-export default function DepartmentForm({
-  onSubmit,
-}) {
+export default function RoleForm({ onSubmit }) {
   const {
     register,
     handleSubmit,
     reset,
-    formState: {
-      errors,
-      isSubmitting,
-    },
+    formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(
-      departmentSchema
-    ),
+    resolver: zodResolver(roleSchema),
 
     defaultValues: {
       name: "",
@@ -45,6 +33,7 @@ export default function DepartmentForm({
 
   async function submitForm(data) {
     await onSubmit?.(data);
+
     reset();
   }
 
@@ -53,35 +42,28 @@ export default function DepartmentForm({
       {/* Header */}
 
       <div className="flex items-center gap-2.5 border-b border-slate-200 px-4 py-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-          <Building2 size={15} />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+          <BriefcaseBusiness size={15} />
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold text-slate-800">
-            Add Department
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-800">Add Role</h2>
 
           <p className="text-[10px] text-slate-400">
-            Create a new workforce department
+            Create a reusable employee role
           </p>
         </div>
       </div>
 
       {/* Form */}
 
-      <form
-        onSubmit={handleSubmit(
-          submitForm
-        )}
-        className="space-y-3.5 p-4"
-      >
-        {/* Department Name */}
+      <form onSubmit={handleSubmit(submitForm)} className="space-y-3.5 p-4">
+        {/* Role Name */}
 
         <div>
           <Input
-            label="Department Name"
-            placeholder="Automotive"
+            label="Role Name"
+            placeholder="Senior Technician"
             {...register("name")}
           />
 
@@ -100,13 +82,17 @@ export default function DepartmentForm({
           </label>
 
           <textarea
-            rows={4}
-            placeholder="Describe this department..."
-            {...register(
-              "description"
-            )}
+            rows={3}
+            placeholder="Describe the responsibilities of this role..."
+            {...register("description")}
             className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-50"
           />
+
+          {errors.description && (
+            <p className="mt-1 text-[10px] text-red-500">
+              {errors.description.message}
+            </p>
+          )}
         </div>
 
         {/* Actions */}
@@ -118,8 +104,7 @@ export default function DepartmentForm({
             className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 text-xs font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Check size={13} />
-
-            Add Department
+            Add Role
           </button>
 
           <button
@@ -128,7 +113,6 @@ export default function DepartmentForm({
             className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
           >
             <RotateCcw size={13} />
-
             Reset
           </button>
         </div>

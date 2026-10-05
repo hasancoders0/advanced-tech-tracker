@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,11 +65,15 @@ const navigation = [
         icon: Users,
       },
       {
-        label: "Products & Equipment",
+        label: "Products & Services",
         href: "/sales/products",
         icon: Package,
       },
-
+      {
+        label: "Leads",
+        href: "/sales/leads",
+        icon: Users,
+      },
     ],
   },
 

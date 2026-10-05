@@ -22,7 +22,7 @@ import Select from "@/components/ui/Select";
 
 import { useToast } from "@/components/feedback/ToastProvider";
 
-import techniciansData from "@/data/master/technicians";
+import techniciansData from "@/data/master/employees";
 
 export default function TechManagementPage() {
   const [technicians, setTechnicians] =
