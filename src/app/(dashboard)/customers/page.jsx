@@ -1,12 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Building2,
-  DollarSign,
-  MoreHorizontal,
-  Users,
-} from "lucide-react";
+import { Building2, DollarSign, MoreHorizontal, Users } from "lucide-react";
 
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
@@ -18,9 +13,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
-import Dropdown, {
-  DropdownItem,
-} from "@/components/ui/Dropdown";
+import Dropdown, { DropdownItem } from "@/components/ui/Dropdown";
 
 import { customersData } from "@/data/master/customers";
 
@@ -34,28 +27,28 @@ export default function CustomersPage() {
       const searchValue = search.toLowerCase();
 
       const matchesSearch =
-        customer.name
+        String(customer.name ?? "")
           .toLowerCase()
           .includes(searchValue) ||
-        customer.company
+        String(customer.company ?? "")
           .toLowerCase()
           .includes(searchValue) ||
-        customer.email
+        String(customer.phone ?? "")
+          .toLowerCase()
+          .includes(searchValue) ||
+        String(customer.email ?? "")
           .toLowerCase()
           .includes(searchValue);
 
-      const matchesStatus =
-        status === "all" ||
-        customer.status === status;
+      const matchesStatus = status === "all" || customer.status === status;
 
       return matchesSearch && matchesStatus;
     });
   }, [search, status]);
 
   const totalRevenue = customersData.reduce(
-    (sum, customer) =>
-      sum + customer.revenue,
-    0
+    (sum, customer) => sum + customer.revenue,
+    0,
   );
 
   const columns = [
@@ -64,13 +57,9 @@ export default function CustomersPage() {
       label: "Customer",
       render: (row) => (
         <div>
-          <div className="font-medium text-slate-900">
-            {row.name}
-          </div>
+          <div className="font-medium text-slate-900">{row.name}</div>
 
-          <div className="mt-0.5 text-xs text-slate-400">
-            {row.company}
-          </div>
+          <div className="mt-0.5 text-xs text-slate-400">{row.company}</div>
         </div>
       ),
     },
@@ -79,13 +68,9 @@ export default function CustomersPage() {
       label: "Contact",
       render: (row) => (
         <div>
-          <div className="text-slate-700">
-            {row.email}
-          </div>
+          <div className="text-slate-700">{row.email}</div>
 
-          <div className="mt-0.5 text-xs text-slate-400">
-            {row.phone}
-          </div>
+          <div className="mt-0.5 text-xs text-slate-400">{row.phone}</div>
         </div>
       ),
     },
@@ -96,16 +81,14 @@ export default function CustomersPage() {
     {
       key: "sales",
       label: "Sales",
-      render: (row) => (
-        <span>{row.sales}</span>
-      ),
+      render: (row) => <span>{row.sales}</span>,
     },
     {
       key: "revenue",
       label: "Revenue",
       render: (row) => (
         <span className="font-medium text-slate-900">
-          ${row.revenue.toLocaleString()}
+          ${Number(row.revenue ?? 0).toLocaleString()}
         </span>
       ),
     },
@@ -113,13 +96,7 @@ export default function CustomersPage() {
       key: "status",
       label: "Status",
       render: (row) => (
-        <Badge
-          variant={
-            row.status === "Active"
-              ? "success"
-              : "danger"
-          }
-        >
+        <Badge variant={row.status === "Active" ? "success" : "danger"}>
           {row.status}
         </Badge>
       ),
@@ -141,21 +118,13 @@ export default function CustomersPage() {
               </button>
             }
           >
-            <DropdownItem>
-              View Customer
-            </DropdownItem>
+            <DropdownItem>View Customer</DropdownItem>
 
-            <DropdownItem>
-              Edit Customer
-            </DropdownItem>
+            <DropdownItem>Edit Customer</DropdownItem>
 
-            <DropdownItem>
-              Sales History
-            </DropdownItem>
+            <DropdownItem>Sales History</DropdownItem>
 
-            <DropdownItem danger>
-              Delete Customer
-            </DropdownItem>
+            <DropdownItem danger>Delete Customer</DropdownItem>
           </Dropdown>
         </div>
       ),
@@ -181,10 +150,8 @@ export default function CustomersPage() {
         <StatCard
           title="Active Customers"
           value={
-            customersData.filter(
-              (customer) =>
-                customer.status === "Active"
-            ).length
+            customersData.filter((customer) => customer.status === "Active")
+              .length
           }
           icon={Building2}
         />
@@ -230,9 +197,7 @@ export default function CustomersPage() {
 
       <div>
         <div className="mb-3">
-          <h2 className="text-base font-semibold text-slate-900">
-            Customers
-          </h2>
+          <h2 className="text-base font-semibold text-slate-900">Customers</h2>
 
           <p className="mt-1 text-sm text-slate-500">
             {filteredCustomers.length} customers found
@@ -254,15 +219,9 @@ export default function CustomersPage() {
         description="Create a new customer record."
       >
         <div className="space-y-4">
-          <Input
-            label="Customer Name"
-            placeholder="Enter customer name"
-          />
+          <Input label="Customer Name" placeholder="Enter customer name" />
 
-          <Input
-            label="Company"
-            placeholder="Enter company name"
-          />
+          <Input label="Company" placeholder="Enter company name" />
 
           <Input
             label="Email"
@@ -270,29 +229,16 @@ export default function CustomersPage() {
             placeholder="customer@example.com"
           />
 
-          <Input
-            label="Phone"
-            placeholder="+1 555-0000"
-          />
+          <Input label="Phone" placeholder="+1 555-0000" />
 
-          <Input
-            label="Address"
-            placeholder="Enter address"
-          />
+          <Input label="Address" placeholder="Enter address" />
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
 
-            <Button
-              onClick={() => setModalOpen(false)}
-            >
-              Add Customer
-            </Button>
+            <Button onClick={() => setModalOpen(false)}>Add Customer</Button>
           </div>
         </div>
       </Modal>
