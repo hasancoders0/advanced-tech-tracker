@@ -1,480 +1,370 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Activity,
-  Clock3,
-  DollarSign,
-  ShoppingCart,
-  Users,
-  AlertCircle,
-  TrendingUp,
-} from "lucide-react";
-
-import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  BarChart,
-  Bar,
-} from "recharts";
 
 import PageHeader from "@/components/common/PageHeader";
-import StatCard from "@/components/common/StatCard";
-import Card, {
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
-import DataTable from "@/components/common/DataTable";
+import DashboardOverview from "@/components/dashboard/DashboardOverview";
 
-import { workforceData } from "@/data/workforce/workforce-daily";
+import workforceData from "@/data/workforce/workforce-daily";
 import salesData from "@/data/sales/sales-daily";
-import { customersData } from "@/data/master/customers";
-import productsData from "@/data/master/products";
+
+import {
+  format,
+  parseISO,
+} from "date-fns";
+
+import {
+  getRecordDate,
+  getRecordEntries,
+  getEntryDepartment,
+  getProducedHours,
+  getWorkedHours,
+  getEmergencyHours,
+  getStatus,
+  timeCodeToMinutes,
+  minutesToTimeCode,
+} from "@/lib/trend/trend-utils";
+
+function getTodayKey() {
+  return format(new Date(), "yyyy-MM-dd");
+}
+
+function getSaleDate(sale) {
+  return (
+    sale?.date ||
+    sale?.saleDate ||
+    sale?.createdDate ||
+    sale?.createdAt ||
+    null
+  );
+}
+
+function getSaleTotal(sale) {
+  return Number(
+    sale?.total ??
+      sale?.totalAmount ??
+      sale?.grandTotal ??
+      sale?.amount ??
+      sale?.revenue ??
+      0,
+  );
+}
+
+function isPendingSale(sale) {
+  const status = String(
+    sale?.paymentStatus ||
+      sale?.status ||
+      "",
+  ).toLowerCase();
+
+  return [
+    "pending",
+    "unpaid",
+    "partial",
+    "partially paid",
+  ].includes(status);
+}
 
 export default function DashboardPage() {
-  const customerMap = useMemo(() => {
-    return Object.fromEntries(
-      customersData.map((customer) => [
-        customer.id,
-        customer,
-      ])
+  const todayKey = useMemo(
+    () => getTodayKey(),
+    [],
+  );
+
+  /* =======================================================
+     TODAY'S WORKFORCE RECORD
+  ======================================================= */
+
+  const todayWorkforce = useMemo(() => {
+    return workforceData.find(
+      (record) =>
+        getRecordDate(record) === todayKey,
     );
-  }, []);
+  }, [todayKey]);
 
-  const productMap = useMemo(() => {
-    return Object.fromEntries(
-      productsData.map((product) => [
-        product.id,
-        product,
-      ])
+  const workforceEntries = useMemo(() => {
+    return getRecordEntries(
+      todayWorkforce,
     );
-  }, []);
+  }, [todayWorkforce]);
 
-  const activeTechnicians = workforceData.filter(
-    (employee) => employee.status === "Active"
-  );
+  /* =======================================================
+     WORKFORCE STATS
+  ======================================================= */
 
-  const totalHours = workforceData.reduce(
-    (sum, employee) => sum + employee.hours,
-    0
-  );
+  const workforceStats = useMemo(() => {
+    const employees = new Set();
 
-  const emergencyHours = workforceData.reduce(
-    (sum, employee) =>
-      sum + employee.emergencyHours,
-    0
-  );
+    let producedMinutes = 0;
+    let workedMinutes = 0;
+    let emergencyMinutes = 0;
 
-  const completedSales = salesData.filter(
-    (sale) => sale.status === "Completed"
-  );
+    workforceEntries.forEach((entry) => {
+      const status = String(
+        getStatus(entry),
+      ).toLowerCase();
 
-  const pendingSales = salesData.filter(
-    (sale) => sale.status === "Pending"
-  );
+      if (
+        !status.includes("call") &&
+        !status.includes("out")
+      ) {
+        const id =
+          entry?.employeeId ||
+          entry?.technicianId ||
+          entry?.id;
 
-  const completedRevenue = completedSales.reduce(
-    (sum, sale) => sum + sale.amount,
-    0
-  );
-
-  const pendingRevenue = pendingSales.reduce(
-    (sum, sale) => sum + sale.amount,
-    0
-  );
-
-  const departmentData = useMemo(() => {
-    const departments = {};
-
-    workforceData.forEach((employee) => {
-      if (!departments[employee.department]) {
-        departments[employee.department] = {
-          department: employee.department,
-          hours: 0,
-          employees: 0,
-        };
+        if (id) {
+          employees.add(id);
+        }
       }
 
-      departments[employee.department].hours +=
-        employee.hours;
+      producedMinutes += timeCodeToMinutes(
+        getProducedHours(entry),
+      );
 
-      departments[employee.department].employees += 1;
+      workedMinutes += timeCodeToMinutes(
+        getWorkedHours(entry),
+      );
+
+      emergencyMinutes += timeCodeToMinutes(
+        getEmergencyHours(entry),
+      );
     });
 
-    return Object.values(departments);
+    return {
+      employees: employees.size,
+      produced:
+        minutesToTimeCode(
+          producedMinutes,
+        ),
+      worked:
+        minutesToTimeCode(
+          workedMinutes,
+        ),
+      emergency:
+        minutesToTimeCode(
+          emergencyMinutes,
+        ),
+    };
+  }, [workforceEntries]);
+
+  /* =======================================================
+     SALES TODAY
+  ======================================================= */
+
+  const todaySales = useMemo(() => {
+    if (!Array.isArray(salesData)) {
+      return [];
+    }
+
+    return salesData.filter(
+      (sale) =>
+        getSaleDate(sale) === todayKey,
+    );
+  }, [todayKey]);
+
+  const salesStats = useMemo(() => {
+    const revenue = todaySales.reduce(
+      (total, sale) =>
+        total + getSaleTotal(sale),
+      0,
+    );
+
+    const outstanding = todaySales
+      .filter(isPendingSale)
+      .reduce(
+        (total, sale) =>
+          total + getSaleTotal(sale),
+        0,
+      );
+
+    return {
+      count: todaySales.length,
+      revenue,
+      average:
+        todaySales.length > 0
+          ? revenue / todaySales.length
+          : 0,
+      outstanding,
+    };
+  }, [todaySales]);
+
+  /* =======================================================
+     WORKFORCE CHART
+  ======================================================= */
+
+  const workforceChartData = useMemo(() => {
+    return workforceData
+      .slice(-7)
+      .map((record) => {
+        const entries =
+          getRecordEntries(record);
+
+        let produced = 0;
+        let worked = 0;
+
+        entries.forEach((entry) => {
+          produced += timeCodeToMinutes(
+            getProducedHours(entry),
+          );
+
+          worked += timeCodeToMinutes(
+            getWorkedHours(entry),
+          );
+        });
+
+        const date =
+          getRecordDate(record);
+
+        return {
+          label: date
+            ? format(
+                parseISO(date),
+                "MMM d",
+              )
+            : "—",
+          produced: Number(
+            (
+              produced / 60
+            ).toFixed(2),
+          ),
+          worked: Number(
+            (
+              worked / 60
+            ).toFixed(2),
+          ),
+        };
+      });
   }, []);
 
-  const workforceTrend = useMemo(() => {
-    const days = [
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat",
-      "Sun",
-    ];
+  /* =======================================================
+     SALES CHART
+  ======================================================= */
 
-    return days.map((day, index) => ({
-      day,
-      hours:
-        Math.max(
-          0,
-          totalHours -
-            (days.length - index - 1) * 4
+  const salesChartData = useMemo(() => {
+    if (!Array.isArray(salesData)) {
+      return [];
+    }
+
+    const grouped = new Map();
+
+    salesData.forEach((sale) => {
+      const date =
+        getSaleDate(sale);
+
+      if (!date) {
+        return;
+      }
+
+      const key = String(date).slice(
+        0,
+        10,
+      );
+
+      grouped.set(
+        key,
+        (grouped.get(key) || 0) +
+          getSaleTotal(sale),
+      );
+    });
+
+    return Array.from(
+      grouped.entries(),
+    )
+      .sort(([a], [b]) =>
+        a.localeCompare(b),
+      )
+      .slice(-7)
+      .map(([date, revenue]) => ({
+        label: format(
+          parseISO(date),
+          "MMM d",
         ),
-      sales:
-        completedRevenue -
-        (days.length - index - 1) * 180,
-    }));
-  }, [totalHours, completedRevenue]);
+        revenue: Number(
+          revenue.toFixed(2),
+        ),
+      }));
+  }, []);
 
-  const recentSales = salesData.slice(0, 5);
+  /* =======================================================
+     DEPARTMENT PERFORMANCE
+  ======================================================= */
 
-  const recentSaleColumns = [
-    {
-      key: "id",
-      label: "Sale",
-      render: (row) => (
-        <span className="font-medium text-slate-900">
-          {row.id}
-        </span>
-      ),
-    },
-    {
-      key: "customer",
-      label: "Customer",
-      render: (row) => {
-        const customer =
-          customerMap[row.customerId];
+  const departmentData = useMemo(() => {
+    const departments = new Map();
 
-        return (
-          <div>
-            <p className="font-medium text-slate-800">
-              {customer?.name || "Unknown"}
-            </p>
-            <p className="text-xs text-slate-400">
-              {customer?.company || ""}
-            </p>
-          </div>
+    workforceEntries.forEach((entry) => {
+      const department =
+        getEntryDepartment(entry) ||
+        "General";
+
+      const produced =
+        timeCodeToMinutes(
+          getProducedHours(entry),
         );
-      },
-    },
-    {
-      key: "product",
-      label: "Product / Service",
-      render: (row) => {
-        const product =
-          productMap[row.productId];
 
-        return product?.name || "Unknown";
-      },
-    },
-    {
-      key: "amount",
-      label: "Amount",
-      render: (row) => (
-        <span className="font-medium">
-          ${row.amount.toFixed(2)}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (row) => {
-        const variants = {
-          Completed: "success",
-          Pending: "warning",
-          Cancelled: "danger",
-        };
-
-        return (
-          <Badge variant={variants[row.status]}>
-            {row.status}
-          </Badge>
+      if (!departments.has(department)) {
+        departments.set(
+          department,
+          0,
         );
-      },
-    },
-  ];
+      }
+
+      departments.set(
+        department,
+        departments.get(
+          department,
+        ) + produced,
+      );
+    });
+
+    return Array.from(
+      departments.entries(),
+    )
+      .map(
+        ([
+          department,
+          minutes,
+        ]) => ({
+          department,
+          produced: Number(
+            (
+              minutes / 60
+            ).toFixed(2),
+          ),
+        }),
+      )
+      .sort(
+        (a, b) =>
+          b.produced -
+          a.produced,
+      );
+  }, [workforceEntries]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Dashboard"
-        description="Overview of today's workforce and sales activity."
+        description="Overview of today's workforce and sales performance."
       />
 
-      {/* Main Statistics */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Today's Technicians"
-          value={activeTechnicians.length}
-          description="Active employees"
-          icon={Users}
-        />
-
-        <StatCard
-          title="Hours Produced"
-          value={`${totalHours.toFixed(1)}h`}
-          description="Workforce hours"
-          icon={Clock3}
-        />
-
-        <StatCard
-          title="Emergency Hours"
-          value={`${emergencyHours.toFixed(1)}h`}
-          description="Emergency work"
-          icon={AlertCircle}
-        />
-
-        <StatCard
-          title="Today's Revenue"
-          value={`$${completedRevenue.toLocaleString()}`}
-          description="Completed sales"
-          icon={DollarSign}
-        />
-      </div>
-
-      {/* Sales Statistics */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Sales Count"
-          value={salesData.length}
-          description="Total sales records"
-          icon={ShoppingCart}
-        />
-
-        <StatCard
-          title="Completed Sales"
-          value={completedSales.length}
-          description="Completed transactions"
-          icon={TrendingUp}
-        />
-
-        <StatCard
-          title="Pending Payments"
-          value={`$${pendingRevenue.toLocaleString()}`}
-          description="Pending revenue"
-          icon={DollarSign}
-        />
-
-        <StatCard
-          title="Customers"
-          value={customersData.length}
-          description="Registered customers"
-          icon={Users}
-        />
-      </div>
-
-      {/* Charts */}
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Workforce Hours Trend
-            </CardTitle>
-
-            <CardDescription>
-              Workforce hours across the current week.
-            </CardDescription>
-          </CardHeader>
-
-          <div className="h-[320px]">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <LineChart
-                data={workforceTrend}
-                margin={{
-                  top: 10,
-                  right: 10,
-                  left: 0,
-                  bottom: 0,
-                }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip />
-
-                <Line
-                  type="monotone"
-                  dataKey="hours"
-                  name="Hours"
-                  stroke="#0f172a"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Sales Revenue Trend
-            </CardTitle>
-
-            <CardDescription>
-              Revenue generated across the current week.
-            </CardDescription>
-          </CardHeader>
-
-          <div className="h-[320px]">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <LineChart
-                data={workforceTrend}
-                margin={{
-                  top: 10,
-                  right: 10,
-                  left: 0,
-                  bottom: 0,
-                }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip />
-
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  name="Revenue"
-                  stroke="#475569"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* Department Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Department Performance
-          </CardTitle>
-
-          <CardDescription>
-            Workforce hours by department.
-          </CardDescription>
-        </CardHeader>
-
-        <div className="h-[320px]">
-          <ResponsiveContainer
-            width="100%"
-            height="100%"
-          >
-            <BarChart
-              data={departmentData}
-              margin={{
-                top: 10,
-                right: 10,
-                left: 0,
-                bottom: 0,
-              }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-              />
-
-              <XAxis
-                dataKey="department"
-                axisLine={false}
-                tickLine={false}
-              />
-
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-              />
-
-              <Tooltip />
-
-              <Legend />
-
-              <Bar
-                dataKey="hours"
-                name="Hours"
-                fill="#334155"
-                radius={[5, 5, 0, 0]}
-              />
-
-              <Bar
-                dataKey="employees"
-                name="Employees"
-                fill="#94a3b8"
-                radius={[5, 5, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
-      {/* Recent Sales */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            Recent Sales
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Latest sales activity across the business.
-          </p>
-        </div>
-
-        <DataTable
-          columns={recentSaleColumns}
-          data={recentSales}
-          getRowKey={(row) => row.id}
-          emptyMessage="No recent sales."
-        />
-      </div>
+      <DashboardOverview
+        workforceStats={
+          workforceStats
+        }
+        salesStats={
+          salesStats
+        }
+        workforceChartData={
+          workforceChartData
+        }
+        salesChartData={
+          salesChartData
+        }
+        departmentData={
+          departmentData
+        }
+      />
     </div>
   );
 }
