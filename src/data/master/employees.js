@@ -2,7 +2,6 @@
   {
     id: "EMP-001",
     employeeCode: "EMP-001",
-
     name: "Deomar Contreras",
     fullName: "Deomar Contreras",
 
@@ -22,18 +21,12 @@
     employment: {
       departmentId: "dept-automotive",
       department: "Automotive",
-
       roleId: "role-senior-technician",
       role: "Senior Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2021-03-15",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -51,7 +44,6 @@
   {
     id: "EMP-002",
     employeeCode: "EMP-002",
-
     name: "Alan Rivera",
     fullName: "Alan Rivera",
 
@@ -71,18 +63,12 @@
     employment: {
       departmentId: "dept-automotive",
       department: "Automotive",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2022-06-20",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -100,7 +86,6 @@
   {
     id: "EMP-003",
     employeeCode: "EMP-003",
-
     name: "Roberto Lopez Jr",
     fullName: "Roberto Lopez Jr",
 
@@ -120,18 +105,12 @@
     employment: {
       departmentId: "dept-automotive",
       department: "Automotive",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2023-01-09",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -149,7 +128,6 @@
   {
     id: "EMP-005",
     employeeCode: "EMP-005",
-
     name: "Mike Memmel",
     fullName: "Mike Memmel",
 
@@ -169,18 +147,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-senior-technician",
       role: "Senior Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2020-08-17",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -198,7 +170,6 @@
   {
     id: "EMP-006",
     employeeCode: "EMP-006",
-
     name: "Roberto Lopez",
     fullName: "Roberto Lopez",
 
@@ -218,18 +189,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2022-11-14",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -247,7 +212,6 @@
   {
     id: "EMP-007",
     employeeCode: "EMP-007",
-
     name: "Trevor McCarty",
     fullName: "Trevor McCarty",
 
@@ -267,18 +231,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2023-04-03",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -296,7 +254,6 @@
   {
     id: "EMP-008",
     employeeCode: "EMP-008",
-
     name: "Julio Alatorre",
     fullName: "Julio Alatorre",
 
@@ -316,18 +273,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2023-07-10",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -345,7 +296,6 @@
   {
     id: "EMP-009",
     employeeCode: "EMP-009",
-
     name: "Rob Kile",
     fullName: "Rob Kile",
 
@@ -365,18 +315,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2024-01-08",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -394,7 +338,6 @@
   {
     id: "EMP-010",
     employeeCode: "EMP-010",
-
     name: "Joe Rascon",
     fullName: "Joe Rascon",
 
@@ -414,18 +357,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2024-02-19",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -443,7 +380,6 @@
   {
     id: "EMP-011",
     employeeCode: "EMP-011",
-
     name: "Fabian Lopez",
     fullName: "Fabian Lopez",
 
@@ -463,18 +399,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2024-05-06",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -492,7 +422,6 @@
   {
     id: "EMP-012",
     employeeCode: "EMP-012",
-
     name: "Tanner Cummings",
     fullName: "Tanner Cummings",
 
@@ -512,18 +441,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2024-08-12",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -541,7 +464,6 @@
   {
     id: "EMP-013",
     employeeCode: "EMP-013",
-
     name: "Joe Nathan",
     fullName: "Joe Nathan",
 
@@ -561,18 +483,12 @@
     employment: {
       departmentId: "dept-service",
       department: "Service",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2025-01-13",
-
       terminationDate: null,
-
       notes: "",
     },
 
@@ -590,7 +506,6 @@
   {
     id: "EMP-014",
     employeeCode: "EMP-014",
-
     name: "Mike DiDonato",
     fullName: "Mike DiDonato",
 
@@ -610,18 +525,12 @@
     employment: {
       departmentId: "dept-hvac",
       department: "HVAC",
-
       roleId: "role-technician",
       role: "Technician",
-
       employmentType: "Full Time",
-
       status: "Active",
-
       hireDate: "2025-03-10",
-
       terminationDate: null,
-
       notes: "",
     },
 

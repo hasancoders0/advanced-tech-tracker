@@ -15,7 +15,8 @@ import {
   Settings,
   ShoppingCart,
   Users,
-  Wrench,
+  CalendarRange,
+  DatabaseBackup,
 } from "lucide-react";
 
 const navigation = [
@@ -69,7 +70,6 @@ const navigation = [
         href: "/sales/products",
         icon: Package,
       },
-
     ],
   },
 
@@ -79,36 +79,14 @@ const navigation = [
     icon: BarChart3,
     children: [
       {
-        label: "Week",
-        href: "/trend/week",
+        label: "Workforce",
+        href: "/trend/workforce",
+        icon: Users,
       },
       {
-        label: "MTD",
-        href: "/trend/mtd",
-      },
-      {
-        label: "CM vs LM",
-        href: "/trend/cm-vs-lm",
-      },
-      {
-        label: "Call Outs",
-        href: "/trend/call-outs",
-      },
-      {
-        label: "Emergency Hours",
-        href: "/trend/emergency-hours",
-      },
-      {
-        label: "3 Month",
-        href: "/trend/three-month",
-      },
-      {
-        label: "6 Month",
-        href: "/trend/six-month",
-      },
-      {
-        label: "YTD",
-        href: "/trend/ytd",
+        label: "Sales",
+        href: "/trend/sales",
+        icon: ShoppingCart,
       },
     ],
   },
@@ -128,25 +106,32 @@ const navigation = [
       {
         label: "Main",
         href: "/settings/main",
+        icon: Settings,
       },
       {
         label: "Reporting",
         href: "/settings/reporting",
+        icon: BarChart3,
       },
       {
-        label: "Tech Management",
-        href: "/settings/tech-management",
+        label: "Calendar",
+        href: "/settings/calendar",
+        icon: CalendarRange,
       },
       {
-        label: "User Management",
-        href: "/settings/user-management",
+        label: "Backup & Restore",
+        href: "/settings/backup-restore",
+        icon: DatabaseBackup,
       },
     ],
   },
 ];
 
 function isActivePath(pathname, href) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`)
+  );
 }
 
 function hasActiveChild(pathname, children = []) {
@@ -177,6 +162,7 @@ export default function Sidebar({
 
   return (
     <>
+      {/* Mobile overlay */}
       {open && (
         <button
           type="button"
@@ -192,12 +178,17 @@ export default function Sidebar({
           "border-r border-slate-800 bg-[#0d1620]",
           "transition-transform duration-200",
           "lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
+          open
+            ? "translate-x-0"
+            : "-translate-x-full",
         ].join(" ")}
       >
         <div className="flex h-full flex-col">
 
-          {/* Logo */}
+          {/* =====================================================
+              LOGO
+          ===================================================== */}
+
           <div className="flex h-[74px] shrink-0 items-center border-b border-slate-800 px-5">
             <div className="flex items-center gap-3">
 
@@ -218,9 +209,11 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-2 py-4">
+          {/* =====================================================
+              NAVIGATION
+          ===================================================== */}
 
+          <nav className="flex-1 overflow-y-auto px-2 py-4">
             <div className="space-y-1">
 
               {navigation.map((item) => {
@@ -228,17 +221,27 @@ export default function Sidebar({
 
                 const active =
                   item.href &&
-                  isActivePath(pathname, item.href);
+                  isActivePath(
+                    pathname,
+                    item.href
+                  );
 
                 const childActive =
-                  hasActiveChild(pathname, item.children);
+                  hasActiveChild(
+                    pathname,
+                    item.children
+                  );
 
                 const isExpanded =
-                  expanded[item.key] || childActive;
+                  expanded[item.key] ||
+                  childActive;
 
                 /*
-                 * Simple navigation item
+                 * -------------------------------------------------
+                 * SIMPLE NAVIGATION ITEM
+                 * -------------------------------------------------
                  */
+
                 if (!item.children) {
                   return (
                     <Link
@@ -254,20 +257,28 @@ export default function Sidebar({
                       ].join(" ")}
                     >
                       <Icon size={19} />
-                      <span>{item.label}</span>
+
+                      <span>
+                        {item.label}
+                      </span>
                     </Link>
                   );
                 }
 
                 /*
-                 * Parent navigation item
+                 * -------------------------------------------------
+                 * PARENT NAVIGATION ITEM
+                 * -------------------------------------------------
                  */
+
                 return (
                   <div key={item.key}>
 
                     <button
                       type="button"
-                      onClick={() => toggleSection(item.key)}
+                      onClick={() =>
+                        toggleSection(item.key)
+                      }
                       className={[
                         "flex h-11 w-full items-center justify-between rounded-lg px-3",
                         "text-sm font-semibold transition",
@@ -278,7 +289,10 @@ export default function Sidebar({
                     >
                       <span className="flex items-center gap-3">
                         <Icon size={19} />
-                        <span>{item.label}</span>
+
+                        <span>
+                          {item.label}
+                        </span>
                       </span>
 
                       {isExpanded ? (
@@ -288,41 +302,59 @@ export default function Sidebar({
                       )}
                     </button>
 
+                    {/* -------------------------------------------------
+                        CHILDREN
+                    ------------------------------------------------- */}
+
                     {isExpanded && (
                       <div className="ml-5 mt-1 border-l border-slate-700 pl-2">
-
                         <div className="space-y-1">
 
-                          {item.children.map((child) => {
-                            const ChildIcon = child.icon;
+                          {item.children.map(
+                            (child) => {
+                              const ChildIcon =
+                                child.icon;
 
-                            const childActive =
-                              isActivePath(
-                                pathname,
-                                child.href
+                              const childActive =
+                                isActivePath(
+                                  pathname,
+                                  child.href
+                                );
+
+                              return (
+                                <Link
+                                  key={
+                                    child.href
+                                  }
+                                  href={
+                                    child.href
+                                  }
+                                  onClick={
+                                    onClose
+                                  }
+                                  className={[
+                                    "flex min-h-10 items-center gap-3 rounded-lg px-3",
+                                    "text-sm transition",
+                                    childActive
+                                      ? "bg-[#087eae] font-semibold text-white"
+                                      : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                                  ].join(" ")}
+                                >
+                                  {ChildIcon && (
+                                    <ChildIcon
+                                      size={16}
+                                    />
+                                  )}
+
+                                  <span>
+                                    {
+                                      child.label
+                                    }
+                                  </span>
+                                </Link>
                               );
-
-                            return (
-                              <Link
-                                key={child.href}
-                                href={child.href}
-                                onClick={onClose}
-                                className={[
-                                  "flex min-h-10 items-center gap-3 rounded-lg px-3",
-                                  "text-sm transition",
-                                  childActive
-                                    ? "bg-[#087eae] font-semibold text-white"
-                                    : "text-slate-400 hover:bg-slate-800 hover:text-white",
-                                ].join(" ")}
-                              >
-                                {ChildIcon && (
-                                  <ChildIcon size={16} />
-                                )}
-
-                                <span>{child.label}</span>
-                              </Link>
-                            );
-                          })}
+                            }
+                          )}
 
                         </div>
                       </div>
@@ -335,7 +367,10 @@ export default function Sidebar({
             </div>
           </nav>
 
-          {/* Footer */}
+          {/* =====================================================
+              FOOTER
+          ===================================================== */}
+
           <div className="shrink-0 border-t border-slate-800 px-5 py-4">
             <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-slate-500">
               Advanced Tech
